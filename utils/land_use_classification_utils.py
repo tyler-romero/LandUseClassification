@@ -10,17 +10,31 @@ import microsoftml as ml
 import utils.connection_settings as cs
 
 
-def generate_csv(training_image_dir, label_to_number_dict):
-    csv_path = os.path.join(training_image_dir, cs.LAND_USE_CSV)
-    with open(csv_path, 'w') as map_file:
-        map_file.write('image, label\n')
-        for label in np.sort(os.listdir(training_image_dir)):
-            my_dir = os.path.join(training_image_dir, label)
-            if not os.path.isdir(my_dir):
-                continue
-            for filename in os.listdir(my_dir):
-                map_file.write('{}, {}\n'.format(os.path.join(my_dir, filename), label_to_number_dict[label]))
-    return csv_path
+# def generate_csv(training_image_dir, label_to_number_dict):
+#     csv_path = os.path.join(training_image_dir, cs.LAND_USE_CSV)
+#     with open(csv_path, 'w') as map_file:
+#         map_file.write('image, label\n')
+#         for label in np.sort(os.listdir(training_image_dir)):
+#             my_dir = os.path.join(training_image_dir, label)
+#             if not os.path.isdir(my_dir):
+#                 continue
+#             for filename in os.listdir(my_dir):
+#                 map_file.write('{}, {}\n'.format(os.path.join(my_dir, filename), label_to_number_dict[label]))
+#     return csv_path
+
+
+def gather_data(training_image_dir, label_to_number_dict):
+    images = []
+    labels = []
+    for label in np.sort(os.listdir(training_image_dir)):
+        my_dir = os.path.join(training_image_dir, label)
+        if not os.path.isdir(my_dir):
+            continue
+        for filename in os.listdir(my_dir):
+            images.append(os.path.join(my_dir, filename))
+            labels.append(label_to_number_dict[label])
+    data = {'image': images, 'label': labels}
+    return pd.DataFrame.from_dict(data)
 
 
 def compute_features(data, model, compute_context):
