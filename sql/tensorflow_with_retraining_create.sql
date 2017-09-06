@@ -1,3 +1,9 @@
+-- TODO:
+-- Right now the model reads and (attempts to) writes to the filetables. Without db_writers permissions for SQLRUserGroup, the writes will fail. Potential workaround: Write to a temporary folder, and then
+--	Perform a manual selection and insertion into the filetable using the users own account. Problem with that is that the python package that attepts to locate the default temp directory (tempfile) doesnt always return the same directory
+--	when executed from T-SQL.
+-- Add arguements to Score and Evaluate to accomodate both validation and testing
+
 USE [land_use_database]
 GO
 
@@ -8,11 +14,11 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 
-IF OBJECT_ID('[dbo].[Preprocessing]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[Preprocessing];  
+IF OBJECT_ID('[dbo].[PreprocessingTF]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[PreprocessingTF];  
 GO  
 
-CREATE PROCEDURE [dbo].[Preprocessing]
+CREATE PROCEDURE [dbo].[PreprocessingTF]
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -25,7 +31,6 @@ BEGIN
     , @script = N'
 import os
 import numpy as np
-import tempfile
 
 import land_use.connection_settings as cs
 import land_use.land_use_classification_utils as luc
@@ -51,11 +56,11 @@ END
 GO
 
 
-IF OBJECT_ID('[dbo].[Retrain]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[Retrain];  
+IF OBJECT_ID('[dbo].[RetrainTF]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[RetrainTF];  
 GO  
 
-CREATE PROCEDURE [dbo].[Retrain] 
+CREATE PROCEDURE [dbo].[RetrainTF] 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -75,11 +80,12 @@ import land_use.land_use_classification_utils as luc
 
 # path where retrained model and logs will be saved during training
 train_data = os.path.join(cs.IMAGE_DIR, "TrainData")
+train_dir = os.path.join(cs.IMAGE_DIR, "TFRetrainCheckpoints")
+# temp_dir = tempfile.gettempdir()	# Cannot write to TFRetrainCheckpoints from Python (SQLRUserGroup)_), so write to a temp directory, then move files
+# print("TempDir", temp_dir)
 
 # Retrain the model. This can take hours.
-temp_dir = tempfile.gettempdir()
-print("TempDir", temp_dir)
-#retrain(train_data, temp_dir)
+retrain(train_data, train_dir)
 	'
 	EXECUTE sp_execute_external_script
 	@language = N'python',
@@ -89,21 +95,23 @@ END
 GO
 
 
-IF OBJECT_ID('[dbo].[ScoreModel]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[ScoreModel];  
-GO  
-
-
-IF OBJECT_ID('[dbo].[Score]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[Score];  
+IF OBJECT_ID('[dbo].[ScoreTF]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[ScoreTF];  
 GO 
 
-CREATE PROCEDURE [dbo].[Score] 
+CREATE PROCEDURE [dbo].[ScoreTF] 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+
+	DROP TABLE IF EXISTS [dbo].[tf_val_predictions]
+	CREATE TABLE [dbo].[tf_val_predictions](
+		[filename] nvarchar(max),
+		[true_label] int,
+		[predicted_label] int
+	)
 	
 	DECLARE @predictScript NVARCHAR(MAX);
 	SET @predictScript = N'
@@ -120,17 +128,15 @@ image_dir = cs.IMAGE_DIR
 label_to_number_dict = cs.LABELS
 
 dataset_dir = os.path.join(cs.IMAGE_DIR, "ValData")
-file_list = glob.glob("{}/*/*.png".format(dataset_dir))
+file_list = glob.glob("{}/*/*.png".format(dataset_dir))	# TODO: get the file list using a filetable query
 
-start = pd.datetime.now()
 results_tf = luc.score_model(file_list)
 print("Scored {} images".format(len(results_tf)))
-stop = pd.datetime.now()
-print(stop - start)
 
 tf_df = pd.DataFrame(results_tf, columns=["filename", "true_label", "predicted_label"])
-# TODO: write this
+OutputDataSet = tf_df
 	'
+	INSERT INTO [dbo].[tf_val_predictions] (filename, true_label, predicted_label)
 	EXECUTE sp_execute_external_script
 	@language = N'python',
 	@script = @predictScript;
@@ -139,11 +145,11 @@ END
 GO
 
 
-IF OBJECT_ID('[dbo].[Evaluate]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[Evaluate];  
+IF OBJECT_ID('[dbo].[EvaluateTF]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[EvaluateTF];  
 GO 
 
-CREATE PROCEDURE [dbo].[Evaluate] 
+CREATE PROCEDURE [dbo].[EvaluateTF] 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -165,7 +171,7 @@ repo_dir = cs.REPO_DIR
 image_dir = cs.IMAGE_DIR
 label_to_number_dict = cs.LABELS
 
-# TODO: Read tf_df
+tf_df = InputDataSet
 y_pred = np.array(tf_df["predicted_label"])
 y_true = np.array(tf_df["true_label"])
 
@@ -183,7 +189,8 @@ print("Accuracy (Undeveloped, Cultivated, Developed): ", accuracy)
 	'
 	EXECUTE sp_execute_external_script
 	@language = N'python',
-	@script = @predictScript;
+	@script = @predictScript,
+	@input_data_1 = N'SELECT filename, true_label, predicted_label FROM dbo.tf_val_predictions';
 
 END
 GO

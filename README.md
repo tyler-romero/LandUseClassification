@@ -16,7 +16,11 @@ This repository demonstrates how trained DNNs can be operationalized to score a 
 ## Fast start
 
 To get started right away,
-* TODO: add instructions here
+* First, create the database and necessary filetables by running [file_table_creation.sql](./sql/file_table_creation.sql). You may need to enable the use of filetables by following the instructions [here](http://www.kodyaz.com/t-sql/default-filestream-filegroup-is-not-available-in-database.aspx).
+* Update the settings in connection_settings.py.
+* Run create_test_set.py in order to extract a test set from the existing validation set.
+* Run download_tf_models.py in order to download the pretrained tensorflow model.
+* Now you can walk through the three python notebooks, [MicrosoftML.ipynb](./MicrosoftML.ipynb), [Tensorflow_from_scratch.ipynb](./Tensorflow_from_scratch.ipynb), and [Tensorflow_with_retraining.ipynb](./Tensorflow_with_retraining.ipynb).
 * If you want to learn how the retrained DNN can be used to study urban development trends, see the [Middlesex County Land Use Prediction](./land_use_prediction.md) page.
 * For the motivation and summary of our work, see below.
 

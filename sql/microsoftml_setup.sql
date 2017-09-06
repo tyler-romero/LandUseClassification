@@ -8,11 +8,11 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 
-IF OBJECT_ID('[dbo].[GenerateFeatures]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].GenerateFeatures;  
+IF OBJECT_ID('[dbo].[GenerateFeaturesML]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].GenerateFeaturesML;  
 GO  
 
-CREATE PROCEDURE [dbo].GenerateFeatures @input_table varchar(max), @output_table varchar(max)
+CREATE PROCEDURE [dbo].GenerateFeaturesML @input_table varchar(max), @output_table varchar(max)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -57,11 +57,11 @@ END
 GO
 
 
-IF OBJECT_ID('[dbo].[TrainModel]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[TrainModel];  
+IF OBJECT_ID('[dbo].[TrainModelML]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[TrainModelML];  
 GO  
 
-CREATE PROCEDURE [dbo].[TrainModel] 
+CREATE PROCEDURE [dbo].[TrainModelML] 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -114,11 +114,11 @@ END
 GO
 
 
-IF OBJECT_ID('[dbo].[ScoreModel]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[ScoreModel];  
+IF OBJECT_ID('[dbo].[ScoreModelML]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[ScoreModelML];  
 GO  
 
-CREATE PROCEDURE [dbo].[ScoreModel] 
+CREATE PROCEDURE [dbo].[ScoreModelML] 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -165,10 +165,10 @@ GO
 
 
 IF OBJECT_ID('[dbo].[EvaluateModel]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[EvaluateModel];  
+    DROP PROCEDURE [dbo].[EvaluateModelML];  
 GO 
 
-CREATE PROCEDURE [dbo].[EvaluateModel] 
+CREATE PROCEDURE [dbo].[EvaluateModelML] 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

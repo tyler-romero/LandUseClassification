@@ -1,3 +1,7 @@
+-- TODO:
+--	Right now the model attempts to load the entire dataset in memory. Transition to a batched approach, such as the TFRecords used in the retraining version of this scenario.
+--	Note that the from scratch model performs less well than the transfer learning model when they are trained in the python notebook. Consider if it is even worth creating stored procedures for the from scratch version.
+
 USE [land_use_database]
 GO
 
@@ -8,11 +12,11 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 
-IF OBJECT_ID('[dbo].[Train]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[Train];  
+IF OBJECT_ID('[dbo].[TrainModelTF]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[TrainModelTF];  
 GO  
 
-CREATE PROCEDURE [dbo].[Train] 
+CREATE PROCEDURE [dbo].[TrainModelTF] 
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -67,11 +71,11 @@ END
 GO
 
 
-IF OBJECT_ID('[dbo].[Score]', 'P') IS NOT NULL  
-    DROP PROCEDURE [dbo].[Score];  
+IF OBJECT_ID('[dbo].[ScoreModelTF]', 'P') IS NOT NULL  
+    DROP PROCEDURE [dbo].[ScoreModelTF];  
 GO 
 
-CREATE PROCEDURE [dbo].[Score] @mode nvarchar(4)
+CREATE PROCEDURE [dbo].[ScoreModelTF] @mode nvarchar(4)
 AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

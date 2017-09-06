@@ -358,8 +358,8 @@ def load_data(image_info):
 
 def merge_classes(y):
     # Regroup into three classes: Undeveloped, Cultivated, Developed. 6 is the new class label.
-    y[y==cs.LABLES["Barren"]] = 6
-    y[y==cs.LABLES["Forest"]] = 6
-    y[y==cs.LABLES["Shrub"]] = 6
-    y[y==cs.LABLES["Herbaceous"]] = 6
+    y[y==cs.LABELS["Barren"]] = 6
+    y[y==cs.LABELS["Forest"]] = 6
+    y[y==cs.LABELS["Shrub"]] = 6
+    y[y==cs.LABELS["Herbaceous"]] = 6
     return y

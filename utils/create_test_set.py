@@ -8,9 +8,12 @@ import connection_settings as cs
 
 subdir_list = ["Barren", "Cultivated", "Developed", "Forest", "Herbaceous", "Shrub"]
 
+valdir = os.path.join(cs.IMAGE_DIR, "ValData")
+testdir = os.path.join(cs.IMAGE_DIR, "TestData")
+
 for subdir in subdir_list:
-    val = os.path.join(cs.VALIDATION_IMAGE_DIR, subdir)
-    test = os.path.join(cs.TEST_IMAGE_DIR, subdir)
+    val = os.path.join(valdir, subdir)
+    test = os.path.join(testdir, subdir)
     if not os.path.exists(test):
         os.makedirs(test)
     files = os.listdir(val)
